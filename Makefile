@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall
-TARGET = curs
+TARGET = Curs
 SRC = main.c
 
 all: $(TARGET)
