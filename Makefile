@@ -1,12 +1,12 @@
 CC = gcc
 CFLAGS = -Wall
-TARGET = Curs
-SRC = main.c
+TARGET = main
+SRC = Curs.cpp
 
 all: $(TARGET)
 
-$(TARGET): main.c
-    $(CC) $(CFLAGS) -o $(TARGET) main.c
+$(TARGET): $(SRC)
+	$(CC) $(CFLAGS) -o $(TARGET) $(SRC)
 
 clean:
-    rm -f $(TARGET)
+	rm -f $(TARGET)
