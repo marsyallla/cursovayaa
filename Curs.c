@@ -85,6 +85,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < n; i++) {
         result[i] = 0;
     }
+    srand(time(NULL));
     for (int i = 0; i < y; i++) {
         float xi = (float)rand() / RAND_MAX;
         int ind = binary(allsums, n, xi);
