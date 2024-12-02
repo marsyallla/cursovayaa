@@ -40,6 +40,10 @@ int main(int argc, char** argv) {
     }
     FILE* file;
     errno_t err = fopen_s(&file, "input.txt", "r");
+    if (err != 0 || file == NULL) {
+    printf("Error opening file\n");
+    return 1;
+}
     if (file == NULL) {
         printf("Error opening file\n");
         return 1;
