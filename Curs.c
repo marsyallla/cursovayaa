@@ -39,7 +39,10 @@ int main(int argc, char** argv) {
         return 1;
     }
     FILE* file;
-    errno_t err = fopen_s(&file, "input.txt", "r");
+    int i = 1;
+    char filename[20];
+    snprintf(filename, sizeof(filename), "input%d.txt", i);
+    errno_t err = fopen_s(&file, filename, "r");
     if (err != 0 || file == NULL) {
     printf("Error opening file\n");
     return 1;
