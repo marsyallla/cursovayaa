@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall
 TARGET = main
-SRC = Curs.cpp
+SRC = Curs.c
 
 all: $(TARGET)
 
