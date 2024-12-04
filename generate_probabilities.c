@@ -2,29 +2,39 @@
 #include <stdlib.h>
 #include <time.h>
 
-void normalize(float* array, int size) {
+void generate_probabilities(const char* filename, int count) {
+    FILE* file;
+    errno_t err = fopen_s(&file, filename, "w");
+    if (err != 0 || file == NULL) {
+        printf("Error opening file\n");
+        return;
+    }
+    float* probabilities = (float*)malloc(count * sizeof(float));
+    if (probabilities == NULL) {
+        printf("Memory allocation failed\n");
+        fclose(file);
+        return;
+    }
+    srand((unsigned int)time(NULL));
     float sum = 0.0;
-    for (int i = 0; i < size; i++) {
-        sum += array[i];
+    for (int i = 0; i < count; i++) {
+        probabilities[i] = (float)rand() / RAND_MAX;
+        sum += probabilities[i];
     }
-    for (int i = 0; i < size; i++) {
-        array[i] /= sum;
+    for (int i = 0; i < count; i++) {
+        probabilities[i] /= sum;
     }
+    for (int i = 0; i < count; i++) {
+        fprintf(file, "%.6f\n", probabilities[i]);
+    }
+
+    printf("Generated %d probabilities and saved to %s\n", count, filename);
+    free(probabilities);
+    fclose(file);
 }
 int main() {
-    int n = 1000000;
-    float probabilities[1000000];
-    srand(time(NULL)); 
-    for (int i = 0; i < n; i++) {
-        probabilities[i] = (float)rand() / RAND_MAX; 
-    }
-        normalize(probabilities, n);
-        for (int i = 0; i < n; i++) {
-        printf("%f", probabilities[i]);
-        if (i < n - 1) {
-            printf(" ");
-        }
-    }
-    printf("\n"); 
+    const char* filename = "probabilities.txt";
+    int count = 1000000;
+    generate_probabilities(filename, count);
     return 0;
 }
