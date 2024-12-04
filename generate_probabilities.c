@@ -11,13 +11,10 @@ void normalize(float* array, int size) {
         array[i] /= sum;
     }
 }
-
 int main() {
-    int n = 1000;
-    float probabilities[1000];
-
+    int n = 1000000;
+    float probabilities[1000000];
     srand(time(NULL)); 
-    // Генерация случайных чисел
     for (int i = 0; i < n; i++) {
         probabilities[i] = (float)rand() / RAND_MAX; 
     }
@@ -28,7 +25,6 @@ int main() {
             printf(" ");
         }
     }
-
     printf("\n"); 
     return 0;
 }
