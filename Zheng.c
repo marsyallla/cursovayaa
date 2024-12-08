@@ -80,12 +80,14 @@ int main(int argc, char** argv) {
         return 1;
     }
     clock_t start = clock();
+    for (int repeat = 0; repeat < 1000000; repeat++) {
     zhen(n, m, probability, r, allsums);
+    }
     clock_t end = clock();
     double elapsed_time = (double)(end - start) / CLOCKS_PER_SEC;
     printf("Elapsed time for Zhen : %f seconds\n", elapsed_time);
     start = clock();
-    for (int i = 0; i < 100000; i++) {
+    for (int i = 0; i < 1000000; i++) {
         simulation(m, n, probability, allsums, r, counts);
     }
     end = clock();
