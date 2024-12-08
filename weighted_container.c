@@ -15,7 +15,6 @@ typedef struct {
     int index;           
     UT_hash_handle hh;   
 } HashElement;
-
 HashElement *hash_table = NULL; 
 Element *container = NULL;     
 int size = 0;                   
@@ -24,7 +23,6 @@ double total_weight = 0.0;
 int *r = NULL;                 
 double *allsums = NULL;        
 int needs_update = 0;           
-
 void container_init(int init_capacity, int m) {
     capacity = init_capacity;
     container = malloc(capacity * sizeof(Element));
@@ -36,31 +34,26 @@ void container_init(int init_capacity, int m) {
         exit(1);
     }
 }
-
-void expand_capacity(int additional_space) {
-    capacity += additional_space;
+void expand_capacity() {
+    capacity = capacity + (capacity / 2);  
     container = realloc(container, capacity * sizeof(Element));
     allsums = realloc(allsums, capacity * sizeof(double));
-    
     if (container == NULL || allsums == NULL) {
         printf("Not enough memory!\n");
         exit(1);
     }
 }
-
 void add_to_hash(int x, int index) {
     HashElement *element = malloc(sizeof(HashElement));
     element->x = x;
     element->index = index;
     HASH_ADD_INT(hash_table, x, element);
 }
-
 HashElement* find_in_hash(int x) {
     HashElement *element;
     HASH_FIND_INT(hash_table, &x, element);
     return element;
 }
-
 void remove_from_hash(int x) {
     HashElement *element = find_in_hash(x);
     if (element) {
@@ -68,17 +61,14 @@ void remove_from_hash(int x) {
         free(element);
     }
 }
-
 void update_zhen(int m) {
     if (size == 0 || total_weight == 0.0) {
         return;
     }
-    
     allsums[0] = container[0].weight / total_weight;
     for (int i = 1; i < size; i++) {
         allsums[i] = allsums[i - 1] + container[i].weight / total_weight;
     }
-    
     int i = 1;
     for (int j = 1; j <= m; j++) {
         while (i < size && allsums[i - 1] <= (double)(j - 1) / m) {
@@ -87,24 +77,20 @@ void update_zhen(int m) {
         r[j - 1] = i;
     }
 }
-
 void update_if_needed(int m) {
     if (needs_update) {
         update_zhen(m);
         needs_update = 0;
     }
 }
-
 void add_or_update_element(int *xi_array, double *wi_array, int num_elements, int m) {
     for (int i = 0; i < num_elements; i++) {
         int xi = xi_array[i];
         double wi = wi_array[i];
-
         if (wi <= 0.0) {
             printf("Negative weight\n");
             continue;
         }
-
         HashElement *existing = find_in_hash(xi);
         if (existing) {
             total_weight -= container[existing->index].weight;
@@ -113,11 +99,9 @@ void add_or_update_element(int *xi_array, double *wi_array, int num_elements, in
             needs_update = 1;
             continue;
         }
-
         if (size == capacity) {
-            expand_capacity(1000); 
+            expand_capacity(); 
         }
-
         container[size].x = xi;
         container[size].weight = wi;
         add_to_hash(xi, size);
@@ -126,61 +110,50 @@ void add_or_update_element(int *xi_array, double *wi_array, int num_elements, in
         needs_update = 1;
     }
 }
-
 void remove_element(int *xi_array, int num_elements, int m) {
     for (int i = 0; i < num_elements; i++) {
         int xi = xi_array[i];
         HashElement *existing = find_in_hash(xi);
-        
         if (!existing) {
             printf("Element %d not found\n", xi);
             continue;
         }
-
         int index = existing->index;
         total_weight -= container[index].weight;
-
-        for (int j = index; j < size - 1; j++) {
-            container[j] = container[j + 1];
-        }
-        
-        size--;
-        
-        for (int j = index; j < size; j++) {
-            HashElement *e = find_in_hash(container[j].x);
-            if (e) {
-                e->index = j;
+        if (index != size - 1) {
+            container[index] = container[size - 1];
+            HashElement *last_elem = find_in_hash(container[size - 1].x);
+            if (last_elem) {
+                last_elem->index = index;
             }
         }
-        
+        size--;
         remove_from_hash(xi);
         needs_update = 1;
     }
 }
-int random_select(int m, int num_selections) {
+void random_select(int m, int num_selections) {
     if (size == 0 || total_weight == 0.0) {
         printf("Container is empty or weight is zero\n");
-        return -1;
+        return;
     }
     update_if_needed(m);
     printf("Randomly picked elements:\n");
-    for(int i = 0; i < num_selections; i++) {
+    for (int k = 0; k < num_selections; k++) {
         double random = (double)rand() / RAND_MAX;
         int j = (int)(m * random);
         if (j >= m) j = m - 1; 
-        int idx = r[j];
-        while (idx < size && random > allsums[idx]) {
-            idx++;
+        int i = r[j];
+        while (i < size && random > allsums[i]) {
+            i++;
         }
-        if (idx < size) {
-            printf("%d\n", container[idx].x);
+        if (i < size) {
+            printf("%d\n", container[i].x);
         } else {
-            printf("Error: not selected element.\n");
+            printf("Error: element not selected\n");
         }
     }
-    return 0;
 }
-
 void display_container() {
     printf("Container state:\n");
     if (size == 0) {
@@ -192,7 +165,6 @@ void display_container() {
         }
     }
 }
-
 void menu(int m) {
     int choice;
     while (1) {
@@ -243,7 +215,6 @@ void menu(int m) {
         }
     }
 }
-
 int main() {
     srand(time(NULL)); 
     int m = 100; 
