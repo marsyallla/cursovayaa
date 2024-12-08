@@ -1,59 +1,58 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
-#include "uthash.h" 
+#include "uthash.h"
 
-typedef struct {
-    int x;         
+typedef struct Element {
+    int x;
     double weight;
+    struct Element *next;
 } Element;
 
 typedef struct {
-    int x;               
-    int index;           
-    UT_hash_handle hh;   
+    int x;
+    int index;
+    UT_hash_handle hh;
 } HashElement;
-HashElement *hash_table = NULL; 
-Element *container = NULL;     
-int size = 0;                   
-int capacity = 0;              
-double total_weight = 0.0;     
-int *r = NULL;                 
-double *allsums = NULL;        
-int needs_update = 0;           
+
+HashElement *hash_table = NULL;
+Element *head = NULL;
+int size = 0;
+int capacity = 0;
+double total_weight = 0.0;
+int *r = NULL;
+double *allsums = NULL;
+int needs_update = 0;
+
 void container_init(int init_capacity, int m) {
     capacity = init_capacity;
-    container = malloc(capacity * sizeof(Element));
-    allsums = malloc(capacity * sizeof(double));
     r = malloc(m * sizeof(int));
+    allsums = malloc(capacity * sizeof(double));
     
-    if (container == NULL || allsums == NULL || r == NULL) {
+    if (r == NULL || allsums == NULL) {
         printf("Not enough memory!\n");
         exit(1);
     }
 }
-void expand_capacity() {
-    capacity = capacity + (capacity / 2);  
-    container = realloc(container, capacity * sizeof(Element));
-    allsums = realloc(allsums, capacity * sizeof(double));
-    if (container == NULL || allsums == NULL) {
-        printf("Not enough memory!\n");
-        exit(1);
-    }
-}
+
 void add_to_hash(int x, int index) {
     HashElement *element = malloc(sizeof(HashElement));
+    if (element == NULL) {
+        printf("Failed to allocate memory for hash element.\n");
+        exit(1);
+    }
     element->x = x;
     element->index = index;
     HASH_ADD_INT(hash_table, x, element);
 }
+
 HashElement* find_in_hash(int x) {
     HashElement *element;
     HASH_FIND_INT(hash_table, &x, element);
     return element;
 }
+
 void remove_from_hash(int x) {
     HashElement *element = find_in_hash(x);
     if (element) {
@@ -61,14 +60,22 @@ void remove_from_hash(int x) {
         free(element);
     }
 }
+
 void update_zhen(int m) {
     if (size == 0 || total_weight == 0.0) {
         return;
     }
-    allsums[0] = container[0].weight / total_weight;
+
+    allsums[0] = head->weight / total_weight;
+    Element *current = head->next;
+
     for (int i = 1; i < size; i++) {
-        allsums[i] = allsums[i - 1] + container[i].weight / total_weight;
+        if (current != NULL) {
+            allsums[i] = allsums[i - 1] + current->weight / total_weight;
+            current = current->next;
+        }
     }
+
     int i = 1;
     for (int j = 1; j <= m; j++) {
         while (i < size && allsums[i - 1] <= (double)(j - 1) / m) {
@@ -77,39 +84,55 @@ void update_zhen(int m) {
         r[j - 1] = i;
     }
 }
+
 void update_if_needed(int m) {
     if (needs_update) {
         update_zhen(m);
         needs_update = 0;
     }
 }
-void add_or_update_element(int *xi_array, double *wi_array, int num_elements, int m) {
+
+void add_or_update_element(int *xi_array, double *wi_array, int num_elements) {
     for (int i = 0; i < num_elements; i++) {
         int xi = xi_array[i];
         double wi = wi_array[i];
-        if (wi <= 0.0) {
-            printf("Negative weight\n");
+
+        if (wi < 0.0) {
+            printf("Negative weight for element %d\n", xi);
             continue;
         }
+
         HashElement *existing = find_in_hash(xi);
         if (existing) {
-            total_weight -= container[existing->index].weight;
-            container[existing->index].weight = wi;
-            total_weight += wi;
-            needs_update = 1;
-            continue;
+            Element *current = head;
+            for (int j = 0; j <= existing->index; j++) {
+                current = current->next;
+            }
+            if (current != NULL) {
+                total_weight -= current->weight;
+                current->weight = wi;
+                total_weight += wi;
+                needs_update = 1;
+            } else {
+                printf("Error: Element with index %d not found.\n", existing->index);
+            }
+        } else {
+            Element *new_element = malloc(sizeof(Element));
+            if (new_element == NULL) {
+                printf("Failed to allocate memory for new element.\n");
+                exit(1);
+            }
+            new_element->x = xi;
+            new_element->weight = wi;
+            new_element->next = head;
+            head = new_element;
+            size++;
+            total_weight+=wi;
+            add_to_hash(xi,size-1);
         }
-        if (size == capacity) {
-            expand_capacity(); 
-        }
-        container[size].x = xi;
-        container[size].weight = wi;
-        add_to_hash(xi, size);
-        size++;
-        total_weight += wi;
-        needs_update = 1;
     }
 }
+
 void remove_element(int *xi_array, int num_elements, int m) {
     for (int i = 0; i < num_elements; i++) {
         int xi = xi_array[i];
@@ -119,19 +142,30 @@ void remove_element(int *xi_array, int num_elements, int m) {
             continue;
         }
         int index = existing->index;
-        total_weight -= container[index].weight;
-        if (index != size - 1) {
-            container[index] = container[size - 1];
-            HashElement *last_elem = find_in_hash(container[size - 1].x);
-            if (last_elem) {
-                last_elem->index = index;
-            }
+        Element *current = head;
+        Element *prev = NULL;
+        for (int j = 0; j < index; j++) {
+            prev = current;
+            current = current->next;
         }
+        total_weight -= current->weight;
+        if (prev) {
+            prev->next = current->next;
+            } else {
+            head = current->next;
+        }
+        free(current);
         size--;
+        for (int j = index; j < size; j++) {
+            HashElement *e = find_in_hash(head->x);
+            e->index--;
+            head = head->next;
+        }
         remove_from_hash(xi);
         needs_update = 1;
     }
 }
+
 void random_select(int m, int num_selections) {
     if (size == 0 || total_weight == 0.0) {
         printf("Container is empty or weight is zero\n");
@@ -139,32 +173,34 @@ void random_select(int m, int num_selections) {
     }
     update_if_needed(m);
     printf("Randomly picked elements:\n");
-    for (int k = 0; k < num_selections; k++) {
+    for (int i = 0; i < num_selections; i++) {
         double random = (double)rand() / RAND_MAX;
         int j = (int)(m * random);
-        if (j >= m) j = m - 1; 
-        int i = r[j];
-        while (i < size && random > allsums[i]) {
-            i++;
+        if (j >= m) j = m - 1;
+        int idx = r[j];
+        Element *current = head;
+        for (int k = 0; k < idx; k++) {
+            current = current->next;
         }
-        if (i < size) {
-            printf("%d\n", container[i].x);
-        } else {
-            printf("Error: element not selected\n");
-        }
+        printf("%d\n", current->x);
     }
 }
+
 void display_container() {
     printf("Container state:\n");
     if (size == 0) {
         printf("Container is empty\n");
     } else {
         printf("Total weight: %.2f\n", total_weight);
-        for (int i = 0; i < size; i++) {
-            printf("%5d | %7d | %.2f \n", i, container[i].x, container[i].weight);
+        Element *current = head;
+        int index = 0;
+        while (current) {
+            printf("%5d | %7d | %.2f \n", index++, current->x, current->weight);
+            current = current->next;
         }
     }
 }
+
 void menu(int m) {
     int choice;
     while (1) {
@@ -175,6 +211,7 @@ void menu(int m) {
         printf("5. Display container\n");
         printf("Your choice: ");
         scanf("%d", &choice);
+        
         if (choice == 1) {
             int num_elements;
             printf("Enter number of elements: ");
@@ -186,10 +223,11 @@ void menu(int m) {
                 scanf("%d", &xi_array[i]);
                 printf("Enter element weight (wi): ");
                 scanf("%lf", &wi_array[i]);
+                add_or_update_element(xi_array, wi_array, num_elements);
             }
-            add_or_update_element(xi_array, wi_array, num_elements, m);
             free(xi_array);
             free(wi_array);
+            
         } else if (choice == 2) {
             int num_elements;
             printf("Enter number of elements: ");
@@ -201,13 +239,16 @@ void menu(int m) {
             }
             remove_element(xi_array, num_elements, m);
             free(xi_array);
+            
         } else if (choice == 3) {
             int num_selections;
             printf("Enter number of elements: ");
             scanf("%d", &num_selections);
             random_select(m, num_selections);
+            
         } else if (choice == 5) {
             display_container();
+            
         } else if (choice == 4) {
             break;
         } else {
@@ -215,18 +256,24 @@ void menu(int m) {
         }
     }
 }
+
 int main() {
-    srand(time(NULL)); 
-    int m = 100; 
-    container_init(1000, m); 
-    menu(m); 
-    free(container);
-    free(allsums);
+    srand(time(NULL));
+    int m = 100;
+    container_init(1000, m);
+    menu(m);
     free(r);
-    HashElement *current, *tmp;
-    HASH_ITER(hh, hash_table, current, tmp) {
-        HASH_DEL(hash_table, current);
-        free(current);
+    free(allsums);
+    Element *current = head;
+    while (current) {
+        Element *tmp = current;
+        current = current->next;
+        free(tmp);
+    }
+    HashElement *current_hash, *tmp_hash;
+    HASH_ITER(hh, hash_table, current_hash, tmp_hash) {
+        HASH_DEL(hash_table, current_hash);
+        free(current_hash);
     }
     return 0;
 }
