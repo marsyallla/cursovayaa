@@ -34,38 +34,42 @@ int main(int argc, char** argv) {
     normalize(probability, n);
 
     int* result_binary = (int*)calloc(n, sizeof(int));
-    int* result_zhen = (int*)calloc(n, sizeof(int));
-    if (result_binary == NULL || result_zhen == NULL) {
+    int* result_inverse = (int*)calloc(n, sizeof(int));
+    if (result_binary == NULL || result_inverse == NULL) {
         printf("Memory allocation failed\n");
         free(probability);
         return 1;
     }
-
+    srand(time(NULL));
+    float* random = (float*)malloc(y*sizeof(float));
+    for (int i=0;i<y;i++){
+        random[i]=(float)rand()/RAND_MAX;
+    }
     clock_t start_time_binary = clock();
-    simulate(n, probability, y, result_binary, 0);
+    simulate(n, probability, y, result_binary, 0, random);
     clock_t end_time_binary = clock();
 
-    clock_t start_time_zhen = clock();
-    simulate(n, probability, y, result_zhen, 1);
-    clock_t end_time_zhen = clock();
+    clock_t start_time_inverse = clock();
+    simulate(n, probability, y, result_inverse, 1, random);
+    clock_t end_time_inverse = clock();
 
     printf("Results:\n");
     for (int i = 0; i < n; i++) {
-        printf("Element %d: Binary=%d, Zhen=%d\n", i, result_binary[i], result_zhen[i]);
+        printf("Element %d: Binary=%d, Inverse=%d\n", i, result_binary[i], result_inverse[i]);
     }
 
     printf("\nChecking probabilities:\n");
     for (int i = 0; i < n; i++) {
-        printf("Element %d: Probability=%f, Binary_approx=%f, Zhen_approx=%f\n",
-               i, probability[i], (float)result_binary[i] / y, (float)result_zhen[i] / y);
+        printf("Element %d: Probability=%f, Binary_approx=%f, Inverse_approx=%f\n",
+               i, probability[i], (float)result_binary[i] / y, (float)result_inverse[i] / y);
     }
 
     printf("Binary Search: %.10f seconds\n", (double)(end_time_binary - start_time_binary) / CLOCKS_PER_SEC);
-    printf("Zhen Method: %.10f seconds\n", (double)(end_time_zhen - start_time_zhen) / CLOCKS_PER_SEC);
+    printf("Inverse Method Function: %.10f seconds\n", (double)(end_time_inverse - start_time_inverse) / CLOCKS_PER_SEC);
 
     free(probability);
     free(result_binary);
-    free(result_zhen);
+    free(result_inverse);
 
     return 0;
 }

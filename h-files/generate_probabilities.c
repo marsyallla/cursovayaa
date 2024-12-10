@@ -32,7 +32,7 @@ void generate_probabilities(const char* filename, int count) {
 
 int main() {
     const char* filename = "probabilities.txt";
-    int count = 1000000;
+    int count = 1000;
     generate_probabilities(filename, count);
     return 0;
 }

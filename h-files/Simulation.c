@@ -19,19 +19,24 @@ void allsum(float* probability, float* allsums, int size) {
     }
 }
 
-void simulate(int n, float* probability, int y, int* result, int method) {
+void simulate(int n, float* probability, int y, int* result, int method, float* random) {
     float* allsums = (float*)malloc(n * sizeof(float));
     allsum(probability, allsums, n);
-
-    srand(time(NULL));
     if (method == 0) {
         for (int i = 0; i < y; i++) {
-            float xi = (float)rand() / RAND_MAX;
+            float xi = random[i];
             int ind = binary(allsums, n, xi);
             result[ind]++;
         }
     } else {
-        zhen(n, y, probability, result, allsums);
+        for(int i=0; i<y;i++){
+            float xi = random[i];
+            int index=0;
+            while(index<n &&allsums[index]<xi){
+                index++;
+            }
+            result[index]++;
+        }
     }
 
     free(allsums);

@@ -16,7 +16,7 @@ int binary(float* allsums, int size, float xi) {
     return left;
 }
 
-void zhen(int n, int m, float* p, int* r, float* s) {
+void inverse_method_function(int n, int m, float* p, int* r, float* s) {
     srand(time(NULL));
     s[0] = p[0];
     for (int k = 1; k < n; k++) {
