@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
 
     printf("\nChecking probabilities:\n");
     for (int i = 0; i < n; i++) {
-        printf("Element %d: Probability=%f, Binary_approx=%f, Inverse_approx=%f\n",
+        printf("Element %d: Probability=%f, Binary_approx=%f, Zhen_approx=%f\n",
                i, probability[i], (float)result_binary[i] / y, (float)result_zhen[i] / y);
     }
 

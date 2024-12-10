@@ -22,14 +22,13 @@ double getalpha() {
 }
 
 double zhen(int n, int m, double p[], double s[], int r[]) {
-     int i = 1;
+    int i=1;
     s[0] = p[0];
-
     for (int k = 1; k < n; k++)
         s[k] = s[k - 1] + p[k];
 
     for (int j = 1; j <= m; j++) {
-        while (i < n && s[i] <= (double)(j - 1) / m)
+        while (i < n && s[j] <= (double)(j - 1) / m)
             i++;
         r[j - 1] = i;
     }
@@ -41,10 +40,10 @@ double zhen(int n, int m, double p[], double s[], int r[]) {
 
     i = r[j - 1];
 
-    while (alpha > s[i - 1]) {
+    while (alpha > s[i - 1] && i<n) {
         i++;
         if (i >= n)
-            break;
+       break;
     }
 
     return s[i - 1];
