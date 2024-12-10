@@ -5,9 +5,8 @@
 
 void normalize(float* probability, int size) {
     float sum = 0.0;
-    for (int i = 0; i < size; i++) {
-        sum += probability[i];
-    }
+    for (int i = 0; i < size; i++){
+        sum += probability[i];}
     for (int i = 0; i < size; i++) {
         probability[i] /= sum;
     }
@@ -20,25 +19,19 @@ void allsum(float* probability, float* allsums, int size) {
     }
 }
 
-void simulate(int n, float* probability, int y, int* result, int method, float* random) {
+void simulate(int n, float* probability, int y, int* result, int method) {
     float* allsums = (float*)malloc(n * sizeof(float));
     allsum(probability, allsums, n);
 
-    if (method == 0) {  // Binary Search
+    srand(time(NULL));
+    if (method == 0) {
         for (int i = 0; i < y; i++) {
-            float xi = random[i];
+            float xi = (float)rand() / RAND_MAX;
             int ind = binary(allsums, n, xi);
             result[ind]++;
         }
-    } else {  // Zhen Search
-        for (int i = 0; i < y; i++) {
-            float xi = random[i];
-            int index = 0;
-            while (index < n && allsums[index] < xi) {
-                index++;
-            }
-            result[index]++;
-        }
+    } else {
+        zhen(n, y, probability, result, allsums);
     }
 
     free(allsums);

@@ -2,6 +2,6 @@
 #define SEARCH_H
 
 int binary(float* allsums, int size, float xi);
-double zhen(int n, int m, double p[], double s[], int r[]);
+void inverse_method_function(int n, int m, float* p, int* r, float*s);
 
 #endif
