@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -std=c99 -O2
-OBJ = main.o simulation.o search.o
+OBJ = main.o simulation.o 
 TARGET = main
 
 all: $(TARGET)
@@ -16,10 +16,6 @@ inverse_function.o: main.c simulation.h
 simulation.o: simulation.c simulation.h search.h
 	@echo "Compiling simulation.c..."
 	$(CC) $(CFLAGS) -c simulation.c
-
-search.o: search.c search.h
-	@echo "Compiling search.c..."
-	$(CC) $(CFLAGS) -c search.c
 
 clean:
 	@echo "Cleaning up..."
