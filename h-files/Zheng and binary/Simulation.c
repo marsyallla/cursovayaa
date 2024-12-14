@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-// Нормализация вероятностей
 void normalize(float* probability, int size) {
     float sum = 0.0;
     for (int i = 0; i < size; i++) {
@@ -13,7 +12,6 @@ void normalize(float* probability, int size) {
     }
 }
 
-// Создание массива накопленных вероятностей
 void allsum(float* probability, float* allsums, int size) {
     allsums[0] = probability[0];
     for (int i = 1; i < size; i++) {
@@ -21,7 +19,6 @@ void allsum(float* probability, float* allsums, int size) {
     }
 }
 
-// Инициализация вспомогательного массива r_j
 void initialize_r(int n, int m, float* s, int* r) {
     int i = 0;
     for (int j = 1; j <= m; j++) {
@@ -32,20 +29,18 @@ void initialize_r(int n, int m, float* s, int* r) {
     }
 }
 
-// Выборка методом Чжень
 int zhen_sample(int n, int m, float* s, int* r) {
-    float alpha = (float)rand() / RAND_MAX; // Случайное число
-    int j = (int)(m * alpha);              // Индекс для r_j
+    float alpha = (float)rand() / RAND_MAX; 
+    int j = (int)(m * alpha);              
     if (j >= m) j = m - 1;
 
-    int i = r[j]; // Начальный индекс
+    int i = r[j]; 
     while (i < n && alpha > s[i]) {
         i++;
     }
     return i;
 }
 
-// Симуляция методом Чжень
 void simulate_zhen(int n, float* probability, int y, int* result, float* random) {
     float* allsums = (float*)malloc(n * sizeof(float));
     int* r = (int*)malloc(y * sizeof(int));
@@ -62,7 +57,6 @@ void simulate_zhen(int n, float* probability, int y, int* result, float* random)
     free(r);
 }
 
-// Симуляция бинарным поиском
 int binary(float* allsums, int size, float xi) {
     int left = 0, right = size - 1;
     while (left < right) {
