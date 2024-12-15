@@ -56,16 +56,14 @@ int main(int argc, char** argv) {
         random_zhen[i] = (float)rand() / RAND_MAX;
     }
 
-    // Предподсчёт
     float* allsums = (float*)malloc(n * sizeof(float));
-    allsum(probability, allsums, n);  // Подсчёт суммы вероятностей для бинарного метода
+    allsum(probability, allsums, n);  
 
     float* s = (float*)malloc(n * sizeof(float));  
     int* r = (int*)malloc(y * sizeof(int));       
 
-    zhen_precompute(n, y, probability, s, r);  // Предподсчёт для Zhen метода
+    zhen_precompute(n, y, probability, s, r);  
 
-    // Замер времени
     struct timeval start_time_binary, end_time_binary;
     gettimeofday(&start_time_binary, NULL);
     simulate(n, probability, y, result_binary, 0, random_binary, allsums, s, r);

@@ -21,13 +21,13 @@ void allsum(float* probability, float* allsums, int size) {
 }
 
 void simulate(int n, float* probability, int y, int* result, int method, float* random, float* allsums, float* s, int* r) {
-    if (method == 0) {  // Binary Search
+    if (method == 0) {  
         for (int i = 0; i < y; i++) {
             float xi = random[i];
             int ind = binary(allsums, n, xi);
             result[ind]++;
         }
-    } else {  // Zhen Search
+    } else {  
         for (int i = 0; i < y; i++) {
             float xi = random[i];
             int index = zhen_simulate(y, s, r, xi);  
