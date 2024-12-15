@@ -1,7 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <sys/time.h>
 #include "simulation.h"
+#include "search.h"
+
+double get_time_diff(struct timeval start, struct timeval end) {
+    return (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
+}
 
 int main(int argc, char** argv) {
     int n, y;
@@ -51,28 +56,48 @@ int main(int argc, char** argv) {
         random_zhen[i] = (float)rand() / RAND_MAX;
     }
 
-    clock_t start_time_binary = clock();
-    simulate(n, probability, y, result_binary, 0, random_binary); 
-    clock_t end_time_binary = clock();
+    // Предподсчёт
+    float* allsums = (float*)malloc(n * sizeof(float));
+    allsum(probability, allsums, n);  // Подсчёт суммы вероятностей для бинарного метода
 
-    clock_t start_time_zhen = clock();
-    simulate(n, probability, y, result_zhen, 1, random_zhen); 
-    clock_t end_time_zhen = clock();
+    float* s = (float*)malloc(n * sizeof(float));  
+    int* r = (int*)malloc(y * sizeof(int));       
+
+    zhen_precompute(n, y, probability, s, r);  // Предподсчёт для Zhen метода
+
+    // Замер времени
+    struct timeval start_time_binary, end_time_binary;
+    gettimeofday(&start_time_binary, NULL);
+    simulate(n, probability, y, result_binary, 0, random_binary, allsums, s, r);
+    gettimeofday(&end_time_binary, NULL);
+
+    struct timeval start_time_zhen, end_time_zhen;
+    gettimeofday(&start_time_zhen, NULL);
+    simulate(n, probability, y, result_zhen, 1, random_zhen, allsums, s, r);
+    gettimeofday(&end_time_zhen, NULL);
 
     printf("Results:\n");
     for (int i = 0; i < n; i++) {
         printf("Element %d: Binary=%d, Zhen=%d\n", i, result_binary[i], result_zhen[i]);
     }
 
-    printf("\nExecution Times:\n");
-    printf("Binary Search: %.10f seconds\n", (double)(end_time_binary - start_time_binary) / CLOCKS_PER_SEC);
-    printf("Zhen Search: %.10f seconds\n", (double)(end_time_zhen - start_time_zhen) / CLOCKS_PER_SEC);
+    printf("\nChecking probabilities:\n");
+    for (int i = 0; i < n; i++) {
+        printf("Element %d: Probability=%f, Binary_approx=%f, Zhen_approx=%f\n",
+               i, probability[i], (float)result_binary[i] / y, (float)result_zhen[i] / y);
+    }
+
+    printf("Binary Search: %.10f seconds\n", get_time_diff(start_time_binary, end_time_binary));
+    printf("Zhen Search: %.10f seconds\n", get_time_diff(start_time_zhen, end_time_zhen));
 
     free(probability);
     free(result_binary);
     free(result_zhen);
     free(random_binary);
     free(random_zhen);
+    free(allsums);
+    free(s);
+    free(r);
 
     return 0;
 }
