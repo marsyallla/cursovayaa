@@ -1,6 +1,6 @@
 #include "simulation.h"
+#include "search.h"
 #include <stdlib.h>
-#include <time.h>
 
 void normalize(float* probability, int size) {
     float sum = 0.0;
@@ -18,66 +18,60 @@ void allsum(float* probability, float* allsums, int size) {
         allsums[i] = allsums[i - 1] + probability[i];
     }
 }
+void zhen_precompute(int n, int m, float* p, float* s, int* r) {
+    s[0] = p[0];
+    for (int k = 1; k < n; k++) {
+        s[k] = s[k - 1] + p[k];
+    }
 
-void initialize_r(int n, int m, float* s, int* r) {
-    int i = 0;
+    int i = 1;
     for (int j = 1; j <= m; j++) {
-        while (i < n && s[i] < (float)(j - 1) / m) {
+        while (i < n && s[i - 1] <= (float)(j - 1) / m) {
             i++;
         }
         r[j - 1] = i;
     }
 }
 
-int zhen_sample(int n, int m, float* s, int* r) {
-    float alpha = (float)rand() / RAND_MAX; 
-    int j = (int)(m * alpha);              
-    if (j >= m) j = m - 1;
+int zhen_simulate(int m, float* s, int* r, float random) {
+    int j = (int)(m * random) + 1; 
+    if (j > m) {
+        j = m;
+    }
 
-    int i = r[j]; 
-    while (i < n && alpha > s[i]) {
+    int i = r[j - 1];
+    while (i > 0 && random > s[i - 1]) {
         i++;
     }
-    return i;
+    return i - 1;  
 }
-
-void simulate_zhen(int n, float* probability, int y, int* result, float* random) {
+void simulate(int n, float* probability, int y, int* result, int method, float* random) {
     float* allsums = (float*)malloc(n * sizeof(float));
-    int* r = (int*)malloc(y * sizeof(int));
-
-    allsum(probability, allsums, n);
-    initialize_r(n, y, allsums, r);
+    int* r = NULL;  
+    float* s = NULL;
+    if (method == 1) {
+        r = (int*)malloc(y * sizeof(int));
+        s = (float*)malloc(n * sizeof(float));
+        zhen_precompute(n, y, probability, s, r);
+    } else {
+        allsum(probability, allsums, n);
+    }
 
     for (int i = 0; i < y; i++) {
-        int index = zhen_sample(n, y, allsums, r);
+        float xi = random[i];
+        int index = 0;
+
+        if (method == 0) {
+            index = binary(allsums, n, xi);
+        } else {
+            index = zhen_simulate(y, s, r, xi);
+        }
         result[index]++;
     }
 
     free(allsums);
-    free(r);
-}
-
-int binary(float* allsums, int size, float xi) {
-    int left = 0, right = size - 1;
-    while (left < right) {
-        int mid = (left + right) / 2;
-        if (allsums[mid] < xi)
-            left = mid + 1;
-        else
-            right = mid;
+    if (method == 1) {
+        free(r);
+        free(s);
     }
-    return left;
-}
-
-void simulate_binary(int n, float* probability, int y, int* result, float* random) {
-    float* allsums = (float*)malloc(n * sizeof(float));
-    allsum(probability, allsums, n);
-
-    for (int i = 0; i < y; i++) {
-        float xi = random[i];
-        int ind = binary(allsums, n, xi);
-        result[ind]++;
-    }
-
-    free(allsums);
 }
